@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "detexify",
+    "detexify-server",
+]
