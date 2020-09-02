@@ -10,7 +10,6 @@ extern crate rocket_contrib;
 use detexify::Classifier;
 use rocket::State;
 use rocket_contrib::json::{Json, JsonValue};
-use serde::{Deserialize, Serialize};
 
 #[get("/")]
 fn get_root() -> JsonValue {

@@ -1,85 +1,26 @@
-use crate::sim::Sim;
+use crate::point::Point;
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
-use tuple::*;
 
-#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Point {
-    x: f64,
-    y: f64,
-}
+use tuple::*;
 
 pub(crate) static ZERO_POINT: Point = Point { x: 0.0, y: 0.0 };
 pub(crate) static ONE_POINT: Point = Point { x: 1.0, y: 1.0 };
-pub(crate) static HALF_POINT: Point = Point { x: 0.5, y: 0.5 };
 
 pub type Stroke = Vec<Point>;
 
 type Rect = (Point, Point);
 
 fn width(p: Point, q: Point) -> f64 {
-    return q.x - p.x;
+    q.x - p.x
 }
 
 fn height(p: Point, q: Point) -> f64 {
-    return q.y - p.y;
-}
-
-fn add(p: Point, q: Point) -> Point {
-    Point {
-        x: p.x + q.x,
-        y: p.y + q.y,
-    }
-}
-
-fn sub(p: Point, q: Point) -> Point {
-    Point {
-        x: p.x - q.x,
-        y: p.y - q.y,
-    }
-}
-
-fn dot(p: Point, q: Point) -> f64 {
-    (p.x * q.x) + (p.y * q.y)
-}
-
-fn scalar(p: Point, scalar: f64) -> Point {
-    Point {
-        x: p.x * scalar,
-        y: p.y * scalar,
-    }
-}
-
-fn norm(p: Point) -> f64 {
-    dot(p, p).sqrt()
-}
-
-pub(crate) fn euclidean_distance(p: Point, q: Point) -> f64 {
-    norm(sub(p, q))
-}
-
-pub(crate) fn manhattan_distance(p: Point, q: Point) -> f64 {
-    (p.x - q.x).abs() + (p.y - q.y).abs()
-}
-
-fn vendomorphism(a11: f64, a12: f64, a21: f64, a22: f64, p: Point) -> Point {
-    Point {
-        x: a11 * p.x + a12 * p.y,
-        y: a21 * p.x + a22 * p.y,
-    }
-}
-
-fn scale(x: f64, y: f64, p: Point) -> Point {
-    vendomorphism(x, 0.0, 0.0, y, p)
-}
-
-fn translate(x: f64, y: f64, p: Point) -> Point {
-    add(p, Point { x, y })
+    q.y - p.y
 }
 
 fn slength(stroke: Stroke) -> f64 {
     stroke.windows(2).fold(0.0, |distance, ps| {
-        distance + euclidean_distance(ps[0], ps[1])
+        distance + Point::euclidean_distance(ps[0], ps[1])
     })
 }
 
@@ -161,7 +102,9 @@ fn refit(rect: Rect, stroke: Stroke) -> Stroke {
                 //     scale_x, scale_y, trans_x, trans_y
                 // );
 
-                add(scale(scale_x, scale_y, sub(p, bb_1)), trans)
+                (p - bb_1).scale_x(scale_x).scale_y(scale_y) + trans
+
+                // add(scale(scale_x, scale_y, sub(p, bb_1)), trans)
             })
             .collect();
     }
@@ -171,10 +114,10 @@ fn refit(rect: Rect, stroke: Stroke) -> Stroke {
 
 pub(crate) fn aspect_fit(source: Rect, target: Rect) -> Rect {
     if source.0 == source.1 {
-        let centered = scalar(add(target.0, target.1), 0.5);
-        (centered.clone(), centered)
+        let centered = (target.0 + target.1) * 0.5;
+        (centered, centered)
     } else {
-        let reset = source.0.clone();
+        let reset = source.0;
         let source_width = width(source.1, source.0);
         let source_height = height(source.1, source.0);
         let target_width = width(target.1, target.0);
@@ -200,12 +143,7 @@ pub(crate) fn aspect_fit(source: Rect, target: Rect) -> Rect {
             }
         };
 
-        source.map(|p| {
-            add(
-                scale(scale_factor, scale_factor, sub(p, reset)),
-                add(offset, target.0),
-            )
-        })
+        source.map(|p| (p - reset) * scale_factor + (offset + target.0))
     }
 }
 
@@ -214,7 +152,7 @@ pub(crate) fn aspect_refit(r: Rect, s: Stroke) -> Stroke {
 }
 
 pub(crate) fn unduplicate(s: Stroke) -> Stroke {
-    s.into_iter().dedup_by(|p, q| Point::sim(*p, *q)).collect()
+    s.into_iter().dedup_by(|p, q| Point::approx_eq(*p, *q)).collect()
 }
 
 pub(crate) fn smooth(s: Stroke) -> Stroke {
@@ -222,13 +160,13 @@ pub(crate) fn smooth(s: Stroke) -> Stroke {
         return s;
     }
 
-    let first_point = s[0].clone();
-    let last_point = s[s.len() - 1].clone();
+    let first_point = s[0];
+    let last_point = s[s.len() - 1];
 
     let mut smoothed = s
         .into_iter()
         .tuple_windows()
-        .map(|(x, y, z)| scalar(add(x, add(y, z)), 1.0 / 3.0))
+        .map(|(x, y, z)| (x + y + z) * (1.0 / 3.0))
         .collect::<Stroke>();
 
     smoothed.insert(0, first_point);
@@ -249,13 +187,13 @@ pub(crate) fn redistribute(num: i64, s: Stroke) -> Stroke {
             new_stroke.push(s[0]);
 
             for (p, q) in s.clone().into_iter().tuple_windows() {
-                let dir = sub(q, p);
-                let d = norm(dir);
+                let dir = q - p;
+                let d = dir.norm();
 
                 if d < dist {
                     dist -= d;
                 } else {
-                    new_stroke.push(add(p, scalar(dir, dist / d)));
+                    new_stroke.push(p + (dir * (dist / d)));
                 }
             }
 
@@ -266,9 +204,11 @@ pub(crate) fn redistribute(num: i64, s: Stroke) -> Stroke {
 }
 
 fn angle(p: Point, q: Point, r: Point) -> f64 {
-    let v = sub(q, p);
-    let w = sub(r, q);
-    (dot(v, w) / (norm(v) * norm(w))).clamp(-1.0, 1.0).acos()
+    let v = q - p;
+    let w = r - q;
+    (Point::dot(v, w) / (v.norm() * w.norm()))
+        .clamp(-1.0, 1.0)
+        .acos()
 }
 
 pub(crate) fn dominant(alpha: f64, s: Stroke) -> Stroke {
@@ -287,9 +227,10 @@ pub(crate) fn dominant(alpha: f64, s: Stroke) -> Stroke {
 
 #[cfg(test)]
 mod tests {
-
-    use super::{bounding_box, refit, Point, HALF_POINT, ONE_POINT, ZERO_POINT};
+    use super::{bounding_box, refit, Point, ONE_POINT, ZERO_POINT};
     use crate::smooth;
+
+    static HALF_POINT: Point = Point { x: 0.5, y: 0.5 };
 
     #[test]
     fn test_bounding_box() {
@@ -343,11 +284,11 @@ mod tests {
                     y: 1.323
                 },
                 Point {
-                    x: 2.188366666666666,
+                    x: 2.1883666666666666,
                     y: 2.3287666666666667
                 },
                 Point {
-                    x: 2.248666666666667,
+                    x: 2.2486666666666664,
                     y: 3.229236666666666
                 },
                 Point {

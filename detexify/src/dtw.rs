@@ -1,11 +1,3 @@
-fn dtw<T: PartialEq>(measure: fn(T, T) -> f64, s: Vec<T>, o: Vec<T>) -> f64 {
-    todo!()
-}
-
-fn cdtw<T: PartialEq>(measure: fn(T, T) -> f64, w: i64, s: Vec<T>, o: Vec<T>) {
-    todo!()
-}
-
 pub(crate) fn gdtw<T: PartialEq + Clone>(measure: fn(T, T) -> f64, s: Vec<T>, o: Vec<T>) -> f64 {
     assert!(!s.is_empty());
     assert!(!o.is_empty());

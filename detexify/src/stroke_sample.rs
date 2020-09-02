@@ -3,9 +3,9 @@ use crate::dtw::gdtw;
 use crate::{
     smooth,
     stokes::{
-        aspect_refit, dominant, manhattan_distance, redistribute, unduplicate, Stroke, ONE_POINT,
+        aspect_refit, dominant, redistribute, unduplicate, Stroke, ONE_POINT,
         ZERO_POINT,
-    },
+    }, point::Point,
 };
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
@@ -34,6 +34,6 @@ impl StrokeSample {
 
 impl Sample<StrokeSample> for StrokeSample {
     fn distance(a: StrokeSample, b: StrokeSample) -> f64 {
-        gdtw(manhattan_distance, a.strokes.concat(), b.strokes.concat())
+        gdtw(Point::manhattan_distance, a.strokes.concat(), b.strokes.concat())
     }
 }

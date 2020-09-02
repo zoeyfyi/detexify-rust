@@ -1,14 +1,10 @@
 use crate::stroke_sample::StrokeSample;
 use itertools::Itertools;
 use serde::Serialize;
-use std::{collections::HashMap, io::Cursor, path::Path};
+use std::{collections::HashMap};
 
 pub(crate) trait Sample<T> {
     fn distance(a: T, b: T) -> f64;
-
-    fn distance_lb(a: T, b: T) -> f64 {
-        0.0
-    }
 }
 
 #[derive(Debug)]
@@ -40,7 +36,7 @@ impl Classifier {
     }
 
     pub fn classify(&self, unknown: StrokeSample) -> Vec<Score> {
-        let scores = self
+        self
             .samples
             .iter()
             .map(|(id, samples)| {
@@ -60,11 +56,7 @@ impl Classifier {
                 score: dist,
             })
             .sorted_by(|x, y| x.score.partial_cmp(&y.score).unwrap())
-            .collect();
-
-        // println!("scores: {:?}", scores);
-
-        scores
+            .collect()
     }
 }
 
