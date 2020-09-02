@@ -3,8 +3,13 @@ name = "detexify-server"
 version = "0.1.0"
 authors = ["Ben Sheffield <me@mrbenshef.co.uk>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+readme = "README.md"
+description = "Rust port of the [detexify backend](https://github.com/kirel/detexify-hs-backend)."
+license = "MIT"
+homepage = "https://github.com/mrbenshef/detexify-rust/"
+repository = "https://github.com/mrbenshef/detexify-rust/"
+keywords = ["tex", "latex", "classifier"]
+categories = ["computer-vision", "web-programming::http-server"]
 
 [dependencies]
 detexify = { path = "../detexify" }
