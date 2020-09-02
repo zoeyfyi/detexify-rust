@@ -44,8 +44,8 @@ impl Rect {
 #[cfg(test)]
 mod tests {
 
-    use crate::ZERO_POINT;
     use super::Rect;
+    use crate::point::ZERO_POINT;
 
     #[test]
     fn test_rect_point() {

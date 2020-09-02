@@ -2,11 +2,11 @@
 
 pub mod point;
 pub mod rect;
-pub mod stokes;
-pub use self::stokes::*;
-pub mod dtw;
-pub mod classifier;
+pub mod stroke;
+pub use self::stroke::*;
 pub use self::classifier::*;
+pub mod classifier;
+pub mod dtw;
 pub mod stroke_sample;
 pub use self::stroke_sample::*;
 

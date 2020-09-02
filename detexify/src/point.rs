@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Mul, Sub};
 
+pub(crate) const ZERO_POINT: Point = Point { x: 0.0, y: 0.0 };
+pub(crate) const ONE_POINT: Point = Point { x: 1.0, y: 1.0 };
+
 const DELTA: f64 = 1e-10;
 
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -75,6 +78,14 @@ impl Point {
 
     pub(crate) fn approx_eq(p: Point, q: Point) -> bool {
         Point::euclidean_distance(p, q) < DELTA
+    }
+
+    pub(crate) fn angle(p: Point, q: Point, r: Point) -> f64 {
+        let v = q - p;
+        let w = r - q;
+        (Point::dot(v, w) / (v.norm() * w.norm()))
+            .clamp(-1.0, 1.0)
+            .acos()
     }
 }
 
