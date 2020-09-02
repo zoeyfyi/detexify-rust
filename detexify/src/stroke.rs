@@ -1,13 +1,18 @@
 use crate::{point::Point, rect::Rect};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Stroke(Vec<Point>);
 
 impl Stroke {
-    pub(crate) fn new(points: Vec<Point>) -> Self {
+    pub fn new(points: Vec<Point>) -> Self {
         Stroke(points)
+    }
+
+    pub fn points(self) -> Vec<Point> {
+        self.0
     }
 
     pub(crate) fn length(&self) -> f64 {
@@ -134,32 +139,58 @@ impl Stroke {
     }
 
     pub(crate) fn redistribute(&mut self, n: usize) {
+        // degenerate cases
+        if self.0.len() < 2 {
+            return;
+        }
+
         assert!(n > 2);
 
-        let mut dist = self.length() / (n as f64 - 1.0);
+        let dist = self.length() / (n as f64 - 1.0);
         assert!(dist > 0.0);
 
-        let mut distributed = Vec::with_capacity(n);
+        let mut left = dist;
+
+        let mut distributed = Vec::with_capacity(self.0.len());
+        let mut work_list: VecDeque<Point> = self.0.iter().cloned().collect();
 
         distributed.push(self.0[0]);
 
-        for (&p, &q) in self.0.iter().tuple_windows() {
+        let mut i = 100;
+
+        while work_list.len() >= 2 {
+            i -= 1;
+            if i == 0 {
+                break;
+            }
+            
+            let p = work_list.pop_front().unwrap();
+            let q = work_list[0];
+
             let dir = q - p;
             let d = dir.norm();
 
-            if d < dist {
-                dist -= d;
+            
+            if d < left {
+                left -= d;
             } else {
-                distributed.push(p + (dir * (dist / d)));
+                let ins = p + (dir * (left / d));
+                left = dist;
+                work_list.push_front(ins);
+                distributed.push(ins);
             }
         }
 
-        distributed.push(*self.0.last().unwrap());
+        distributed.extend(work_list);
 
         self.0 = distributed;
     }
 
     pub(crate) fn dominant(&mut self, alpha: f64) {
+        if self.0.len() < 3 {
+            return;
+        }
+
         let mut new_stroke = Vec::with_capacity(self.0.len());
         new_stroke.push(self.0[0]);
 
