@@ -1,4 +1,5 @@
 use crate::point::Point;
+use crate::rect::Rect;
 use itertools::Itertools;
 
 use tuple::*;
@@ -7,16 +8,6 @@ pub(crate) static ZERO_POINT: Point = Point { x: 0.0, y: 0.0 };
 pub(crate) static ONE_POINT: Point = Point { x: 1.0, y: 1.0 };
 
 pub type Stroke = Vec<Point>;
-
-type Rect = (Point, Point);
-
-fn width(p: Point, q: Point) -> f64 {
-    q.x - p.x
-}
-
-fn height(p: Point, q: Point) -> f64 {
-    q.y - p.y
-}
 
 fn slength(stroke: Stroke) -> f64 {
     stroke.windows(2).fold(0.0, |distance, ps| {
@@ -30,23 +21,23 @@ fn bounding_box(mut stroke: Stroke) -> Option<Rect> {
     }
 
     let point = stroke.pop().unwrap();
-    let mut rect: Rect = (point, point);
+    let mut rect: Rect = Rect::from_point(point);
 
     for point in stroke {
-        if rect.0.x > point.x {
-            rect.0.x = point.x;
+        if rect.lower_left.x > point.x {
+            rect.lower_left.x = point.x;
         }
 
-        if rect.0.y > point.y {
-            rect.0.y = point.y;
+        if rect.lower_left.y > point.y {
+            rect.lower_left.y = point.y;
         }
 
-        if rect.1.x < point.x {
-            rect.1.x = point.x;
+        if rect.upper_right.x < point.x {
+            rect.upper_right.x = point.x;
         }
 
-        if rect.1.y < point.y {
-            rect.1.y = point.y;
+        if rect.upper_right.y < point.y {
+            rect.upper_right.y = point.y;
         }
     }
 
@@ -54,42 +45,32 @@ fn bounding_box(mut stroke: Stroke) -> Option<Rect> {
 }
 
 fn refit(rect: Rect, stroke: Stroke) -> Stroke {
-    if let Some((bb_1, bb_2)) = bounding_box(stroke.clone()) {
-        let bb_width = width(bb_1, bb_2);
-        let bb_height = height(bb_1, bb_2);
-        let target_width = width(rect.0, rect.1);
-        let target_height = height(rect.0, rect.1);
-
-        // println!(
-        //     "bb_width: {}, bb_height: {}, target_width: {}, target_height: {}",
-        //     bb_width, bb_height, target_width, target_height
-        // );
-
+    if let Some(bb) = bounding_box(stroke.clone()) {
         return stroke
             .into_iter()
             .map(|p| {
-                let scale_x = if bb_width == 0.0 {
+                let scale_x = if bb.width() == 0.0 {
                     1.0
                 } else {
-                    1.0 / bb_width * target_width
+                    1.0 / bb.width() * rect.width()
                 };
 
-                let scale_y = if bb_height == 0.0 {
+                let scale_y = if bb.height() == 0.0 {
                     1.0
                 } else {
-                    1.0 / bb_height * target_height
+                    1.0 / bb.height() * rect.height()
                 };
 
-                let trans_x = if bb_width == 0.0 {
-                    rect.0.x + 0.5 * target_width
+                let trans_x = if bb.width() == 0.0 {
+                    rect.lower_left.x + 0.5 * rect.width()
                 } else {
-                    rect.0.x
+                    rect.lower_left.x
                 };
 
-                let trans_y = if bb_height == 0.0 {
-                    rect.0.y + 0.5 * target_height
+                let trans_y = if bb.height() == 0.0 {
+                    rect.lower_left.y + 0.5 * rect.height()
                 } else {
-                    rect.0.y
+                    rect.lower_left.y
                 };
 
                 let trans = Point {
@@ -102,7 +83,7 @@ fn refit(rect: Rect, stroke: Stroke) -> Stroke {
                 //     scale_x, scale_y, trans_x, trans_y
                 // );
 
-                (p - bb_1).scale_x(scale_x).scale_y(scale_y) + trans
+                (p - bb.lower_left).scale_x(scale_x).scale_y(scale_y) + trans
 
                 // add(scale(scale_x, scale_y, sub(p, bb_1)), trans)
             })
@@ -113,37 +94,33 @@ fn refit(rect: Rect, stroke: Stroke) -> Stroke {
 }
 
 pub(crate) fn aspect_fit(source: Rect, target: Rect) -> Rect {
-    if source.0 == source.1 {
-        let centered = (target.0 + target.1) * 0.5;
-        (centered, centered)
+    if source.is_point() {
+        let centered = (target.lower_left + target.upper_right) * 0.5;
+        Rect::from_point(centered)
     } else {
-        let reset = source.0;
-        let source_width = width(source.1, source.0);
-        let source_height = height(source.1, source.0);
-        let target_width = width(target.1, target.0);
-        let target_height = height(target.1, target.0);
-        let source_ratio = source_width / source_height;
-        let target_ratio = target_width / target_height;
+        let reset = source.lower_left;
+        let source_ratio = source.width() / source.height();
+        let target_ratio = target.width() / target.height();
 
         let scale_factor = if source_ratio > target_ratio {
-            1.0 / source_width * target_width
+            1.0 / source.width() * target.width()
         } else {
-            1.0 / source_height * target_height
+            1.0 / source.height() * target.height()
         };
 
         let offset = if source_ratio > target_ratio {
             Point {
                 x: 0.0,
-                y: (target_height - scale_factor * source_height) / 2.0,
+                y: (target.height() - scale_factor * source.height()) / 2.0,
             }
         } else {
             Point {
-                x: (target_width - scale_factor * source_width) / 2.0,
+                x: (target.width() - scale_factor * source.width()) / 2.0,
                 y: 0.0,
             }
         };
 
-        source.map(|p| (p - reset) * scale_factor + (offset + target.0))
+        source.map(|p| (p - reset) * scale_factor + (offset + target.lower_left))
     }
 }
 
@@ -152,7 +129,9 @@ pub(crate) fn aspect_refit(r: Rect, s: Stroke) -> Stroke {
 }
 
 pub(crate) fn unduplicate(s: Stroke) -> Stroke {
-    s.into_iter().dedup_by(|p, q| Point::approx_eq(*p, *q)).collect()
+    s.into_iter()
+        .dedup_by(|p, q| Point::approx_eq(*p, *q))
+        .collect()
 }
 
 pub(crate) fn smooth(s: Stroke) -> Stroke {
@@ -228,7 +207,7 @@ pub(crate) fn dominant(alpha: f64, s: Stroke) -> Stroke {
 #[cfg(test)]
 mod tests {
     use super::{bounding_box, refit, Point, ONE_POINT, ZERO_POINT};
-    use crate::smooth;
+    use crate::{rect::Rect, smooth};
 
     static HALF_POINT: Point = Point { x: 0.5, y: 0.5 };
 
@@ -238,22 +217,22 @@ mod tests {
 
         assert_eq!(
             bounding_box(vec![Point { x: 1.0, y: 1.0 }, Point { x: -1.0, y: -1.0 }]).unwrap(),
-            (Point { x: -1.0, y: -1.0 }, Point { x: 1.0, y: 1.0 })
+            Rect::new(Point { x: -1.0, y: -1.0 }, Point { x: 1.0, y: 1.0 })
         );
     }
 
     #[test]
     fn test_refit() {
-        assert_eq!(refit((ZERO_POINT, ONE_POINT), vec![]), vec![]);
+        assert_eq!(refit(Rect::new(ZERO_POINT, ONE_POINT), vec![]), vec![]);
 
         assert_eq!(
-            refit((ZERO_POINT, ONE_POINT), vec![Point { x: -100.0, y: 0.0 }]),
+            refit(Rect::new(ZERO_POINT, ONE_POINT), vec![Point { x: -100.0, y: 0.0 }]),
             vec![HALF_POINT]
         );
 
         assert_eq!(
             refit(
-                (ZERO_POINT, ONE_POINT),
+                Rect::new(ZERO_POINT, ONE_POINT),
                 vec![Point { x: -100.0, y: 0.0 }, Point { x: 0.0, y: 100.0 }]
             ),
             vec![ZERO_POINT, ONE_POINT]

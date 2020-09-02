@@ -1,9 +1,10 @@
 #![feature(clamp)]
 
+pub mod point;
+pub mod rect;
 pub mod stokes;
 pub use self::stokes::*;
 pub mod dtw;
-pub mod point;
 pub mod classifier;
 pub use self::classifier::*;
 pub mod stroke_sample;

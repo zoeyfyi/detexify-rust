@@ -5,7 +5,7 @@ use crate::{
     stokes::{
         aspect_refit, dominant, redistribute, unduplicate, Stroke, ONE_POINT,
         ZERO_POINT,
-    }, point::Point,
+    }, point::Point, rect::Rect,
 };
 use serde::{Deserialize, Serialize};
 use std::f64::consts::PI;
@@ -22,7 +22,7 @@ impl StrokeSample {
                 .into_iter()
                 .map(unduplicate)
                 .map(smooth)
-                .map(|s| aspect_refit((ZERO_POINT, ONE_POINT), s))
+                .map(|s| aspect_refit(Rect::new(ZERO_POINT, ONE_POINT), s))
                 .map(|s| redistribute(10, s))
                 .map(unduplicate)
                 .map(|s| dominant(2.0 * PI * 15.0 / 360.0, s))
