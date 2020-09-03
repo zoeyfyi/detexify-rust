@@ -26,14 +26,14 @@ pub(crate) fn gdtw<T: PartialEq + Clone>(measure: fn(T, T) -> f64, s: Vec<T>, o:
             let middle = measure(s[1].clone(), o[1].clone());
             let right = measure(s[0].clone(), o[1].clone());
             
-            if left < middle && left < right {
+            if left <= middle && left <= right {
                 s.remove(0);
                 helper(measure, s, o, r + left, l + 1)
-            } else if middle < left && middle < right {
+            } else if middle <= left && middle <= right {
                 s.remove(0);
                 o.remove(0);
                 helper(measure, s, o, r + middle, l + 1)
-            } else if right < left && right < middle {
+            } else if right <= left && right <= middle {
                 o.remove(0);
                 helper(measure, s, o, r + right, l + 1)
             } else {
