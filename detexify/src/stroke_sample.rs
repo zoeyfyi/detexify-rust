@@ -14,7 +14,13 @@ pub struct StrokeSample {
 }
 
 impl StrokeSample {
-    pub fn new(mut strokes: Vec<Stroke>) -> Self {
+    pub fn new(mut strokes: Vec<Stroke>) -> Option<Self> {
+        strokes.drain_filter(|s| s.is_empty());
+
+        if strokes.is_empty() {
+            return None;
+        }
+
         strokes.truncate(10);
         for stroke in strokes.iter_mut() {
             stroke.dedup();
@@ -25,7 +31,11 @@ impl StrokeSample {
             stroke.dominant(2.0 * PI * 15.0 / 360.0)
         }
 
-        StrokeSample { strokes }
+        Some(StrokeSample { strokes })
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.strokes.is_empty()
     }
 }
 
@@ -42,7 +52,7 @@ impl Sample<StrokeSample> for StrokeSample {
 #[cfg(test)]
 mod tests {
 
-    use crate::{point::Point, Stroke, StrokeSample};
+    use crate::{point::Point, Stroke, StrokeSample, ZERO_POINT};
 
     #[test]
     fn test_sample() {
@@ -96,11 +106,23 @@ mod tests {
             },
         ];
 
-        let sample = StrokeSample::new(vec![Stroke::new(points)]);
+        let sample = StrokeSample::new(vec![Stroke::new(points)]).unwrap();
         assert_eq!(sample.strokes.len(), 1);
 
         for (i, &point) in sample.strokes[0].clone().points().enumerate() {
             assert!(Point::approx_eq(point, expected_points[i]));
         }
+    }
+
+    #[test]
+    fn test_bad_samples() {
+        let strokes = Vec::new();
+        assert!(StrokeSample::new(strokes.clone()).is_none());
+
+        let strokes = vec![Stroke::new(vec![])];
+        assert!(StrokeSample::new(strokes.clone()).is_none());
+
+        let strokes = vec![Stroke::new(vec![Point { x: 0.5, y: 0.5 }])];
+        assert_eq!(StrokeSample::new(strokes.clone()).unwrap().strokes, strokes);
     }
 }

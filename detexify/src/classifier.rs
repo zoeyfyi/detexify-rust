@@ -1,7 +1,7 @@
 use crate::stroke_sample::StrokeSample;
 use itertools::Itertools;
 use serde::Serialize;
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 pub(crate) trait Sample<T> {
     fn distance(a: T, b: T) -> f64;
@@ -35,28 +35,33 @@ impl Classifier {
         samples.map(|s| Classifier { samples: s })
     }
 
-    pub fn classify(&self, unknown: StrokeSample) -> Vec<Score> {
-        self
-            .samples
-            .iter()
-            .map(|(id, samples)| {
-                let mean_dist = samples
-                    .iter()
-                    .cloned()
-                    .map(|s| StrokeSample::distance(unknown.clone(), s))
-                    .sorted_by(|x, y| x.partial_cmp(y).unwrap())
-                    .take(2)
-                    .fold(0.0, |acc, x| acc + x)
-                    / 2.0;
+    pub fn classify(&self, unknown: StrokeSample) -> Option<Vec<Score>> {
+        if unknown.is_empty() {
+            return None;
+        }
 
-                (id, mean_dist)
-            })
-            .map(|(id, dist)| Score {
-                id: id.clone(),
-                score: dist,
-            })
-            .sorted_by(|x, y| x.score.partial_cmp(&y.score).unwrap())
-            .collect()
+        Some(
+            self.samples
+                .iter()
+                .map(|(id, samples)| {
+                    let mean_dist = samples
+                        .iter()
+                        .cloned()
+                        .map(|s| StrokeSample::distance(unknown.clone(), s))
+                        .sorted_by(|x, y| x.partial_cmp(y).unwrap())
+                        .take(2)
+                        .fold(0.0, |acc, x| acc + x)
+                        / 2.0;
+
+                    (id, mean_dist)
+                })
+                .map(|(id, dist)| Score {
+                    id: id.clone(),
+                    score: dist,
+                })
+                .sorted_by(|x, y| x.score.partial_cmp(&y.score).unwrap())
+                .collect(),
+        )
     }
 }
 
@@ -71,11 +76,24 @@ impl Default for Classifier {
 #[cfg(test)]
 mod tests {
     use super::Classifier;
+    use crate::{Stroke, StrokeSample};
 
     #[test]
     fn default_classifier() {
         Classifier::default();
     }
+
+    // #[test]
+    // fn bad_classify_test() {
+    //     let classifier = Classifier::default();
+    //     assert!(classifier
+    //         .classify(StrokeSample::new(Vec::new()).unwrap())
+    //         .is_none());
+
+    //     assert!(classifier
+    //         .classify(StrokeSample::new(vec![Stroke::new(vec![])]))
+    //         .is_none())
+    // }
 }
 
 // fn insert_with_limit<T: Sample>(

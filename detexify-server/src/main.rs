@@ -23,9 +23,9 @@ fn get_root() -> JsonValue {
 fn post_classify(
     stroke_sample: Json<Vec<detexify::Stroke>>,
     classifier: State<Classifier>,
-) -> Json<Vec<detexify::Score>> {
-    let results = classifier.classify(StrokeSample::new(stroke_sample.0));
-    Json(results)
+) -> Option<Json<Vec<detexify::Score>>> {
+    let sample = StrokeSample::new(stroke_sample.0)?;
+    classifier.classify(sample).map(Json)
 }
 
 fn main() {

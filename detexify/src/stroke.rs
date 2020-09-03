@@ -11,6 +11,10 @@ impl Stroke {
         Stroke(points)
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     pub fn points(&self) -> impl Iterator<Item = &Point> {
         self.0.iter()
     }
