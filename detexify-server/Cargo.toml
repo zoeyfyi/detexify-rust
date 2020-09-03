@@ -1,6 +1,6 @@
 [package]
 name = "detexify-server"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Ben Sheffield <me@mrbenshef.co.uk>"]
 edition = "2018"
 readme = "README.md"
@@ -12,7 +12,7 @@ keywords = ["tex", "latex", "classifier"]
 categories = ["computer-vision", "web-programming::http-server"]
 
 [dependencies]
-detexify = { version = "0.1.0", path = "../detexify" }
+detexify = { version = "0.2.0", path = "../detexify" }
 rocket = "0.4.5"
 rocket_contrib = "0.4.5"
 serde = { version = "1.0", features = ["derive"] }

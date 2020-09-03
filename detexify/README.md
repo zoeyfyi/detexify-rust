@@ -8,5 +8,5 @@ Add this to your Cargo.toml:
 
 ```
 [dependencies]
-detexify = "0.1.0"
+detexify = "0.2.0"
 ```

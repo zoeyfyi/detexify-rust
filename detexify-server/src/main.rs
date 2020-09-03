@@ -15,7 +15,7 @@ use rocket_contrib::json::{Json, JsonValue};
 fn get_root() -> JsonValue {
     json!({
         "server": "rust detexify server",
-        "version": "0.1.0",
+        "version": "0.2.0",
     })
 }
 
