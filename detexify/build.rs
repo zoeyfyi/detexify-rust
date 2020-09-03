@@ -16,7 +16,7 @@ struct Symbol {
 }
 
 impl Symbol {
-    fn get_id(&self) -> String {
+    fn get_id(&self) -> &'static str {
         let id = format!(
             "{}-{}-{}",
             self.package,
@@ -24,7 +24,8 @@ impl Symbol {
             self.command.replace("\\", "_")
         );
 
-        base64::encode(id)
+        // TODO: remove this once https://github.com/sfackler/rust-phf/pull/185 is merged
+        Box::leak(base64::encode(id).into_boxed_str())
     }
 }
 

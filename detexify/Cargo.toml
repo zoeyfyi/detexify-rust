@@ -20,6 +20,6 @@ tuple = "0.4.2"
 phf = "0.8"
 
 [build_dependencies]
-phf_codegen = { git = "https://github.com/jean-airoldie/rust-phf", branch = "owned_constfmt" }
+phf_codegen = "0.8"
 yaml-rust = "0.4"
 base64 = "0.12.3"
