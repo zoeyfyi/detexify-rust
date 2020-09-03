@@ -99,7 +99,7 @@ mod tests {
         let sample = StrokeSample::new(vec![Stroke::new(points)]);
         assert_eq!(sample.strokes.len(), 1);
 
-        for (i, &point) in sample.strokes[0].clone().points().iter().enumerate() {
+        for (i, &point) in sample.strokes[0].clone().points().enumerate() {
             assert!(Point::approx_eq(point, expected_points[i]));
         }
     }

@@ -3,7 +3,7 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Stroke(Vec<Point>);
 
 impl Stroke {
@@ -11,8 +11,16 @@ impl Stroke {
         Stroke(points)
     }
 
-    pub fn points(self) -> Vec<Point> {
-        self.0
+    pub fn points(&self) -> impl Iterator<Item = &Point> {
+        self.0.iter()
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear();
+    }
+
+    pub fn add_point(&mut self, point: Point) {
+        self.0.push(point)
     }
 
     pub(crate) fn length(&self) -> f64 {
@@ -110,7 +118,7 @@ impl Stroke {
                 }
             };
 
-            source.map(|p| (p - reset) * scale_factor + (offset + target.lower_left))
+            source.map_points(|p| (p - reset) * scale_factor + (offset + target.lower_left))
         };
 
         self.refit(rect)
@@ -163,14 +171,13 @@ impl Stroke {
             if i == 0 {
                 break;
             }
-            
+
             let p = work_list.pop_front().unwrap();
             let q = work_list[0];
 
             let dir = q - p;
             let d = dir.norm();
 
-            
             if d < left {
                 left -= d;
             } else {
