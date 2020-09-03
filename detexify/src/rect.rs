@@ -33,7 +33,7 @@ impl Rect {
         self.upper_right.y - self.lower_left.y
     }
 
-    pub(crate) fn map<F: FnMut(Point) -> Point>(self, mut f: F) -> Rect {
+    pub(crate) fn map_points<F: FnMut(Point) -> Point>(self, mut f: F) -> Rect {
         Rect {
             lower_left: f(self.lower_left),
             upper_right: f(self.upper_right),

@@ -15,8 +15,8 @@ struct Hit<T> {
 
 #[derive(Debug, Serialize)]
 pub struct Score {
-    id: String,
-    score: f64,
+    pub id: String,
+    pub score: f64,
 }
 
 pub struct Classifier {
