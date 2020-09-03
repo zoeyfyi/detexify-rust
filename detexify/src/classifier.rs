@@ -76,7 +76,6 @@ impl Default for Classifier {
 #[cfg(test)]
 mod tests {
     use super::Classifier;
-    use crate::{Stroke, StrokeSample};
 
     #[test]
     fn default_classifier() {

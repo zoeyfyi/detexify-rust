@@ -51,8 +51,7 @@ impl Sample<StrokeSample> for StrokeSample {
 
 #[cfg(test)]
 mod tests {
-
-    use crate::{point::Point, Stroke, StrokeSample, ZERO_POINT};
+    use crate::{point::Point, Stroke, StrokeSample};
 
     #[test]
     fn test_sample() {
