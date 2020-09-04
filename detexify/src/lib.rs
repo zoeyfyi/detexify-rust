@@ -1,6 +1,3 @@
-#![feature(clamp)]
-#![feature(drain_filter)]
-
 pub mod point;
 pub mod rect;
 pub mod stroke;

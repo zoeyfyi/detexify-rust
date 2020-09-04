@@ -45,6 +45,16 @@ impl Mul<f64> for Point {
     }
 }
 
+fn clamp(v: f64, min: f64, max: f64) -> f64 {
+    if v < min {
+        return min;
+    } else if v > max {
+        return max;
+    } else {
+        return v;
+    }
+}
+
 impl Point {
     pub(crate) fn dot(p: Point, q: Point) -> f64 {
         (p.x * q.x) + (p.y * q.y)
@@ -83,9 +93,7 @@ impl Point {
     pub(crate) fn angle(p: Point, q: Point, r: Point) -> f64 {
         let v = q - p;
         let w = r - q;
-        (Point::dot(v, w) / (v.norm() * w.norm()))
-            .clamp(-1.0, 1.0)
-            .acos()
+        clamp(Point::dot(v, w) / (v.norm() * w.norm()), -1.0, 1.0).acos()
     }
 }
 
