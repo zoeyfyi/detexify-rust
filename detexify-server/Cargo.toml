@@ -12,7 +12,7 @@ keywords = ["tex", "latex", "classifier"]
 categories = ["computer-vision", "web-programming::http-server"]
 
 [dependencies]
-detexify = { version = "0.2.0", path = "../detexify" }
+detexify = { version = "0.3.0", path = "../detexify" }
 rocket = "0.4.5"
 rocket_contrib = "0.4.5"
 serde = { version = "1.0", features = ["derive"] }
