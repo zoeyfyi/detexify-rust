@@ -15,7 +15,7 @@ pub struct StrokeSample {
 
 impl StrokeSample {
     pub fn new(mut strokes: Vec<Stroke>) -> Option<Self> {
-        strokes = strokes.into_iter().filter(|s| s.is_empty()).collect();
+        strokes = strokes.into_iter().filter(|s| !s.is_empty()).collect();
 
         if strokes.is_empty() {
             return None;

@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn test_iterate_symbols() {
-        assert_eq!(iter_symbols().count(), 1089);
+        assert_eq!(iter_symbols().count(), 1098);
     }
 
     #[test]
