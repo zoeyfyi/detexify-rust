@@ -47,7 +47,7 @@ fn main() {
                 text_mode: true,
                 math_mode: false,
             };
-            // panic!("{}", s.get_id());
+
             builder.entry(s.get_id(), &format!("{:?}", s));
         } else {
             let mut package = "latex2e";
@@ -72,7 +72,9 @@ fn main() {
                     // panic!("{}", s.get_id());
                     builder.entry(s.get_id(), &format!("{:?}", s));
                 }
-            } else if !symbol["textmode"].is_badvalue() {
+            }
+
+            if !symbol["textmode"].is_badvalue() {
                 for symbol in symbol["textmode"].as_vec().unwrap() {
                     let s = Symbol {
                         command: symbol.clone().into_string().unwrap(),
@@ -81,10 +83,12 @@ fn main() {
                         text_mode: true,
                         math_mode: false,
                     };
-                    // panic!("{}", s.get_id());
+
                     builder.entry(s.get_id(), &format!("{:?}", s));
                 }
-            } else if !symbol["mathmode"].is_badvalue() {
+            }
+
+            if !symbol["mathmode"].is_badvalue() {
                 for symbol in symbol["mathmode"].as_vec().unwrap() {
                     let s = Symbol {
                         command: symbol.clone().into_string().unwrap(),
@@ -93,11 +97,14 @@ fn main() {
                         text_mode: false,
                         math_mode: true,
                     };
+
+                    if s.command == "\\lightning" && s.package == "wasysym" {
+                        panic!(s.get_id());
+                    }
+
                     // panic!("{}", s.get_id());
                     builder.entry(s.get_id(), &format!("{:?}", s));
                 }
-            } else {
-                unreachable!();
             }
 
             continue;
