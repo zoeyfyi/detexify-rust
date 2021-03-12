@@ -3,4 +3,5 @@
 members = [
     "detexify",
     "detexify-server",
+    "detexify-c",
 ]
