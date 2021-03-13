@@ -1,6 +1,6 @@
 use std::{convert::TryFrom, ffi::CString, os::raw::c_char, ptr};
 
-use detexify::{Classifier, Point, Score, Stroke, StrokeSample};
+use detexify::{Classifier, Point, Score, Stroke, StrokeSample, Symbol};
 
 pub struct StrokeBuilder {
     points: Vec<Point>,
@@ -88,13 +88,46 @@ pub unsafe extern "C" fn scores_length(scores: *mut Scores) -> usize {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn scores_get_id(scores: *mut Scores, i: usize) -> *mut c_char {
+pub unsafe extern "C" fn scores_get_command(scores: *mut Scores, i: usize) -> *mut c_char {
     let id = (*scores).scores.get_unchecked(i).id.clone();
-    CString::new(id).unwrap().into_raw()
+
+    CString::new(Symbol::from_id(&id).unwrap().command)
+        .unwrap()
+        .into_raw()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn scores_id_free(id: *mut c_char) {
+pub unsafe extern "C" fn scores_get_package(scores: *mut Scores, i: usize) -> *mut c_char {
+    let id = (*scores).scores.get_unchecked(i).id.clone();
+
+    CString::new(Symbol::from_id(&id).unwrap().package)
+        .unwrap()
+        .into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn scores_get_font_encoding(scores: *mut Scores, i: usize) -> *mut c_char {
+    let id = (*scores).scores.get_unchecked(i).id.clone();
+
+    CString::new(Symbol::from_id(&id).unwrap().font_encoding)
+        .unwrap()
+        .into_raw()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn scores_get_text_mode(scores: *mut Scores, i: usize) -> bool {
+    let id = (*scores).scores.get_unchecked(i).id.clone();
+    Symbol::from_id(&id).unwrap().text_mode
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn scores_get_math_mode(scores: *mut Scores, i: usize) -> bool {
+    let id = (*scores).scores.get_unchecked(i).id.clone();
+    Symbol::from_id(&id).unwrap().math_mode
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn scores_free(id: *mut c_char) {
     CString::from_raw(id);
 }
 
