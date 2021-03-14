@@ -1,6 +1,6 @@
 use std::{convert::TryFrom, ffi::CString, os::raw::c_char, ptr};
 
-use detexify::{Classifier, Point, Score, Stroke, StrokeSample, Symbol};
+use detexify::{iter_symbols, Classifier, Point, Score, Stroke, StrokeSample, Symbol};
 
 pub struct StrokeBuilder {
     points: Vec<Point>,
@@ -134,4 +134,16 @@ pub unsafe extern "C" fn scores_free(id: *mut c_char) {
 #[no_mangle]
 pub unsafe extern "C" fn scores_get_score(scores: *mut Scores, i: usize) -> f64 {
     (*scores).scores.get_unchecked(i).score
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn symbols_count() -> usize {
+    iter_symbols().count()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn symbols_get(i: usize) -> *mut c_char {
+    CString::new(iter_symbols().nth(i).unwrap().id())
+        .unwrap()
+        .into_raw()
 }
