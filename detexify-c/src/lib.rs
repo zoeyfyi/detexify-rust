@@ -100,17 +100,12 @@ pub unsafe extern "C" fn scores_get_score(scores: *mut Scores, i: usize) -> f64 
     (*scores).scores.get_unchecked(i).score
 }
 
-/// Returns the `i`-th symbol of `scores`, callers responsible for calling `free_symbol` once finished
+/// Returns the `i`-th symbol of `scores`, callers responsible for calling `symbol_free` once finished
 pub unsafe extern "C" fn scores_get_symbol(scores: *mut Scores, i: usize) -> *const Symbol {
     match Symbol::from_id(&(*scores).scores[i].id) {
         Some(symbol) => Box::into_raw(Box::new(symbol)),
         None => ptr::null_mut(),
     }
-}
-
-/// Frees `symbol`
-pub unsafe extern "C" fn free_symbol(symbol: *mut Symbol) {
-    Box::from_raw(symbol);
 }
 
 /// Free's scores
@@ -174,6 +169,11 @@ pub unsafe extern "C" fn symbol_get_text_mode(symbol: *const Symbol) -> bool {
 #[no_mangle]
 pub unsafe extern "C" fn symbol_get_math_mode(symbol: *const Symbol) -> bool {
     (*symbol).math_mode
+}
+
+/// Frees `symbol`
+pub unsafe extern "C" fn symbol_free(symbol: *mut Symbol) {
+    Box::from_raw(symbol);
 }
 
 /// Returns the total number of symbols
