@@ -101,6 +101,7 @@ pub unsafe extern "C" fn scores_get_score(scores: *mut Scores, i: usize) -> f64 
 }
 
 /// Returns the `i`-th symbol of `scores`, callers responsible for calling `symbol_free` once finished
+#[no_mangle]
 pub unsafe extern "C" fn scores_get_symbol(scores: *mut Scores, i: usize) -> *const Symbol {
     match Symbol::from_id(&(*scores).scores[i].id) {
         Some(symbol) => Box::into_raw(Box::new(symbol)),
@@ -172,6 +173,7 @@ pub unsafe extern "C" fn symbol_get_math_mode(symbol: *const Symbol) -> bool {
 }
 
 /// Frees `symbol`
+#[no_mangle]
 pub unsafe extern "C" fn symbol_free(symbol: *mut Symbol) {
     Box::from_raw(symbol);
 }
