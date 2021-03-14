@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, ffi::CString, os::raw::c_char, ptr};
+use std::{convert::TryFrom, ffi::CString, os::raw::c_char, ptr, slice};
 
 use detexify::{iter_symbols, Classifier, Point, Score, Stroke, StrokeSample, Symbol};
 
@@ -122,12 +122,13 @@ pub unsafe extern "C" fn symbol_get_command(
     buffer: *mut c_char,
     len: usize,
 ) {
-    let s = CString::new((*symbol).command).unwrap();
+    let command = (*symbol).command.as_bytes();
     ptr::copy(
-        s.into_raw(),
-        buffer,
-        usize::min(len, (*symbol).command.len()),
+        command.as_ptr(),
+        buffer as *mut u8,
+        usize::min(len, command.len()),
     );
+    ptr::write(buffer.offset(usize::min(len - 1, command.len()) as isize), 0)
 }
 
 /// Gets the package of the `i`-th score
@@ -137,12 +138,13 @@ pub unsafe extern "C" fn symbol_get_package(
     buffer: *mut c_char,
     len: usize,
 ) {
-    let s = CString::new((*symbol).package).unwrap();
+    let package = (*symbol).package.as_bytes();
     ptr::copy(
-        s.into_raw(),
-        buffer,
-        usize::min(len, (*symbol).package.len()),
+        package.as_ptr(),
+        buffer as *mut u8,
+        usize::min(len, package.len()),
     );
+    ptr::write(buffer.offset(usize::min(len - 1, package.len()) as isize), 0)
 }
 
 /// Gets the font encoding of the `i`-th score
@@ -152,12 +154,13 @@ pub unsafe extern "C" fn symbol_get_font_encoding(
     buffer: *mut c_char,
     len: usize,
 ) {
-    let s = CString::new((*symbol).font_encoding).unwrap();
+    let font_encoding = (*symbol).font_encoding.as_bytes();
     ptr::copy(
-        s.into_raw(),
-        buffer,
-        usize::min(len, (*symbol).font_encoding.len()),
+        font_encoding.as_ptr(),
+        buffer as *mut u8,
+        usize::min(len, font_encoding.len()),
     );
+    ptr::write(buffer.offset(usize::min(len - 1, font_encoding.len()) as isize), 0)
 }
 
 /// Gets the text mode of the `i`-th score
