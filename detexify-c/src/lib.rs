@@ -6,6 +6,7 @@ pub struct StrokeBuilder {
     points: Vec<Point>,
 }
 
+/// Creates a new stroke builder
 #[no_mangle]
 pub unsafe extern "C" fn stroke_builder_new(capacity: usize) -> *mut StrokeBuilder {
     Box::into_raw(Box::new(StrokeBuilder {
@@ -13,12 +14,13 @@ pub unsafe extern "C" fn stroke_builder_new(capacity: usize) -> *mut StrokeBuild
     }))
 }
 
+/// Adds a point to the stroke
 #[no_mangle]
 pub unsafe extern "C" fn stroke_builder_add_point(builder: *mut StrokeBuilder, x: f64, y: f64) {
     (*builder).points.push(Point { x, y })
 }
 
-/// Frees builder
+/// Returns the stroke and frees `builder`
 #[no_mangle]
 pub unsafe extern "C" fn stroke_builder_build(builder: *mut StrokeBuilder) -> *mut Stroke {
     let points = Box::from_raw(builder).points;
@@ -29,24 +31,26 @@ pub struct StrokeSampleBuilder {
     strokes: Vec<Stroke>,
 }
 
+/// Creates a new stroke sample builder
 #[no_mangle]
-pub unsafe extern "C" fn stroke_sample_new_builder(capacity: usize) -> *mut StrokeSampleBuilder {
+pub unsafe extern "C" fn stroke_sample_builder_new(capacity: usize) -> *mut StrokeSampleBuilder {
     Box::into_raw(Box::new(StrokeSampleBuilder {
         strokes: Vec::with_capacity(capacity),
     }))
 }
 
+/// Adds a stroke to the stroke sample and frees the stroke
 #[no_mangle]
-pub unsafe extern "C" fn stroke_sample_add_stroke(
+pub unsafe extern "C" fn stroke_sample_builder_add_stroke(
     builder: *mut StrokeSampleBuilder,
     stroke: *mut Stroke,
 ) {
     (*builder).strokes.push(*Box::from_raw(stroke));
 }
 
-/// Free's builder
+/// Returns a stroke sample and free's `builder`
 #[no_mangle]
-pub unsafe extern "C" fn stroke_sample_build(
+pub unsafe extern "C" fn stroke_sample_builder_build(
     builder: *mut StrokeSampleBuilder,
 ) -> *mut StrokeSample {
     let stroke_sample_builder = Box::from_raw(builder);
@@ -57,11 +61,13 @@ pub unsafe extern "C" fn stroke_sample_build(
     }
 }
 
+/// Returns the default classifier
 #[no_mangle]
 pub unsafe extern "C" fn classifier_new_default() -> *mut Classifier {
     Box::into_raw(Box::new(Classifier::default()))
 }
 
+/// Free's a classifier
 pub unsafe extern "C" fn classifier_free(classifier: *mut Classifier) {
     Box::from_raw(classifier);
 }
@@ -70,7 +76,7 @@ pub struct Scores {
     scores: Vec<Score>,
 }
 
-/// Free's sample
+/// Classifiy the sample returning scores and free's `sample`
 #[no_mangle]
 pub unsafe extern "C" fn classify(
     classifier: *mut Classifier,
@@ -82,68 +88,105 @@ pub unsafe extern "C" fn classify(
     }
 }
 
+/// Returns the length of the list of symbols
 #[no_mangle]
 pub unsafe extern "C" fn scores_length(scores: *mut Scores) -> usize {
     (*scores).scores.len()
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn scores_get_command(scores: *mut Scores, i: usize) -> *mut c_char {
-    let id = (*scores).scores.get_unchecked(i).id.clone();
-
-    CString::new(Symbol::from_id(&id).unwrap().command)
-        .unwrap()
-        .into_raw()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn scores_get_package(scores: *mut Scores, i: usize) -> *mut c_char {
-    let id = (*scores).scores.get_unchecked(i).id.clone();
-
-    CString::new(Symbol::from_id(&id).unwrap().package)
-        .unwrap()
-        .into_raw()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn scores_get_font_encoding(scores: *mut Scores, i: usize) -> *mut c_char {
-    let id = (*scores).scores.get_unchecked(i).id.clone();
-
-    CString::new(Symbol::from_id(&id).unwrap().font_encoding)
-        .unwrap()
-        .into_raw()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn scores_get_text_mode(scores: *mut Scores, i: usize) -> bool {
-    let id = (*scores).scores.get_unchecked(i).id.clone();
-    Symbol::from_id(&id).unwrap().text_mode
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn scores_get_math_mode(scores: *mut Scores, i: usize) -> bool {
-    let id = (*scores).scores.get_unchecked(i).id.clone();
-    Symbol::from_id(&id).unwrap().math_mode
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn scores_free(id: *mut c_char) {
-    CString::from_raw(id);
-}
-
+/// Returns the `i`-th score of `scores`
 #[no_mangle]
 pub unsafe extern "C" fn scores_get_score(scores: *mut Scores, i: usize) -> f64 {
     (*scores).scores.get_unchecked(i).score
 }
 
+/// Returns the `i`-th symbol of `scores`, callers responsible for calling `free_symbol` once finished
+pub unsafe extern "C" fn scores_get_symbol(scores: *mut Scores, i: usize) -> *const Symbol {
+    match Symbol::from_id(&(*scores).scores[i].id) {
+        Some(symbol) => Box::into_raw(Box::new(symbol)),
+        None => ptr::null_mut(),
+    }
+}
+
+/// Frees `symbol`
+pub unsafe extern "C" fn free_symbol(symbol: *mut Symbol) {
+    Box::from_raw(symbol);
+}
+
+/// Free's scores
+#[no_mangle]
+pub unsafe extern "C" fn scores_free(scores: *mut Scores) {
+    Box::from_raw(scores);
+}
+
+/// Gets the command of the `i`-th score
+#[no_mangle]
+pub unsafe extern "C" fn symbol_get_command(
+    symbol: *const Symbol,
+    buffer: *mut c_char,
+    len: usize,
+) {
+    let s = CString::new((*symbol).command).unwrap();
+    ptr::copy(
+        s.into_raw(),
+        buffer,
+        usize::min(len, (*symbol).command.len()),
+    );
+}
+
+/// Gets the package of the `i`-th score
+#[no_mangle]
+pub unsafe extern "C" fn symbol_get_package(
+    symbol: *const Symbol,
+    buffer: *mut c_char,
+    len: usize,
+) {
+    let s = CString::new((*symbol).package).unwrap();
+    ptr::copy(
+        s.into_raw(),
+        buffer,
+        usize::min(len, (*symbol).package.len()),
+    );
+}
+
+/// Gets the font encoding of the `i`-th score
+#[no_mangle]
+pub unsafe extern "C" fn symbol_get_font_encoding(
+    symbol: *const Symbol,
+    buffer: *mut c_char,
+    len: usize,
+) {
+    let s = CString::new((*symbol).font_encoding).unwrap();
+    ptr::copy(
+        s.into_raw(),
+        buffer,
+        usize::min(len, (*symbol).font_encoding.len()),
+    );
+}
+
+/// Gets the text mode of the `i`-th score
+#[no_mangle]
+pub unsafe extern "C" fn symbol_get_text_mode(symbol: *const Symbol) -> bool {
+    (*symbol).text_mode
+}
+
+/// Gets the math mode of the `i`-th score
+#[no_mangle]
+pub unsafe extern "C" fn symbol_get_math_mode(symbol: *const Symbol) -> bool {
+    (*symbol).math_mode
+}
+
+/// Returns the total number of symbols
 #[no_mangle]
 pub unsafe extern "C" fn symbols_count() -> usize {
     iter_symbols().count()
 }
 
+/// Returns the `i`-th symbol
 #[no_mangle]
-pub unsafe extern "C" fn symbols_get(i: usize) -> *mut c_char {
-    CString::new(iter_symbols().nth(i).unwrap().id())
-        .unwrap()
-        .into_raw()
+pub unsafe extern "C" fn symbols_get(i: usize) -> *mut Symbol {
+    match iter_symbols().nth(i) {
+        Some(symbol) => Box::into_raw(Box::new(symbol)),
+        None => ptr::null_mut(),
+    }
 }
