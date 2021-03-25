@@ -10,7 +10,6 @@ homepage = "https://github.com/zoeyfyi/detexify-rust/"
 repository = "https://github.com/zoeyfyi/detexify-rust/"
 keywords = ["tex", "latex", "classifier"]
 categories = ["computer-vision"]
-build = "build.rs"
 
 [dependencies]
 detexify = { version = "0.4.0", path = "../detexify" }
