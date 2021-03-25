@@ -1,13 +1,13 @@
 [package]
 name = "detexify"
 version = "0.3.0"
-authors = ["Ben Sheffield <me@mrbenshef.co.uk>"]
+authors = ["Zoey Sheffield <me@zoey.fyi>"]
 edition = "2018"
 readme = "README.md"
 description = "The `detexify` crate is a port of the classifier that powers https://detexify.kirelabs.org/classify.html."
 license = "MIT"
-homepage = "https://github.com/mrbenshef/detexify-rust/"
-repository = "https://github.com/mrbenshef/detexify-rust/"
+homepage = "https://github.com/zoeyfyi/detexify-rust/"
+repository = "https://github.com/zoeyfyi/detexify-rust/"
 keywords = ["tex", "latex", "classifier"]
 categories = ["computer-vision"]
 
