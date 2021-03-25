@@ -25,7 +25,10 @@ impl Symbol {
         );
 
         // TODO: remove this once https://github.com/sfackler/rust-phf/pull/185 is merged
-        Box::leak(base64::encode(id).into_boxed_str())
+        Box::leak(
+            base32::encode(base32::Alphabet::RFC4648 { padding: false }, id.as_bytes())
+                .into_boxed_str(),
+        )
     }
 }
 
@@ -41,7 +44,7 @@ mod tests {
 
     #[test]
     fn test_from_id() {
-        let symbol = Symbol::from_id("bGF0ZXgyZS1PVDEtX3RleHRhc2NpaWNpcmN1bQ==");
+        let symbol = Symbol::from_id("NRQXIZLYGJSS2T2UGEWV65DFPB2GC43DNFUWG2LSMN2W2");
 
         assert_eq!(
             symbol,
@@ -65,21 +68,5 @@ mod tests {
         for symbol in iter_symbols() {
             assert_eq!(Symbol::from_id(symbol.id()).unwrap(), symbol);
         }
-    }
-
-    #[test]
-    fn missing_ids() {
-        // these where missing due to a bug in the build script
-        // if a entry in symbols.yaml had a bothmoth and textmode,
-        // one of the sets of symbols would not be processed
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX2xpZ2h0bmluZw==").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX0xFRlRhcnJvdw==").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX1VQYXJyb3c=").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX29wcG9zaXRpb24=").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX2Nvbmp1bmN0aW9u").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX3BvaW50ZXI=").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX0RPV05hcnJvdw==").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX3JlY29yZGVy").is_some());
-        assert!(Symbol::from_id("d2FzeXN5bS1PVDEtX3Bob25l").is_some());
     }
 }

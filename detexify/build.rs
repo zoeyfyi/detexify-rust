@@ -25,7 +25,10 @@ impl Symbol {
         );
 
         // TODO: remove this once https://github.com/sfackler/rust-phf/pull/185 is merged
-        Box::leak(base64::encode(id).into_boxed_str())
+        Box::leak(
+            base32::encode(base32::Alphabet::RFC4648 { padding: false }, id.as_bytes())
+                .into_boxed_str(),
+        )
     }
 }
 

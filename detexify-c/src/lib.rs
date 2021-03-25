@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, ffi::CString, os::raw::c_char, ptr, slice};
+use std::{os::raw::c_char, ptr};
 
 use detexify::{iter_symbols, Classifier, Point, Score, Stroke, StrokeSample, Symbol};
 
