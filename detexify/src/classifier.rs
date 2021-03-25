@@ -67,32 +67,33 @@ impl Classifier {
 
 impl Default for Classifier {
     fn default() -> Self {
-        Classifier {
-            samples: serde_json::from_slice(include_bytes!("../snapshot.json")).unwrap(),
-        }
+        let samples: HashMap<String, Vec<StrokeSample>> =
+            serde_json::from_slice::<HashMap<String, Vec<StrokeSample>>>(include_bytes!(
+                "../snapshot.json"
+            ))
+            .unwrap()
+            .into_iter()
+            .map(|(id_base64, strokes)| {
+                let id = base64::decode(id_base64).unwrap();
+                let id_base32 = base32::encode(base32::Alphabet::RFC4648 { padding: false }, &id);
+
+                return (id_base32, strokes);
+            })
+            .collect();
+
+        Classifier { samples }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Classifier;
+    use super::*;
+    use crate::stroke::Stroke;
 
     #[test]
     fn default_classifier() {
         Classifier::default();
     }
-
-    // #[test]
-    // fn bad_classify_test() {
-    //     let classifier = Classifier::default();
-    //     assert!(classifier
-    //         .classify(StrokeSample::new(Vec::new()).unwrap())
-    //         .is_none());
-
-    //     assert!(classifier
-    //         .classify(StrokeSample::new(vec![Stroke::new(vec![])]))
-    //         .is_none())
-    // }
 }
 
 // fn insert_with_limit<T: Sample>(
