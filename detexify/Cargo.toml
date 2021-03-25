@@ -1,6 +1,6 @@
 [package]
 name = "detexify"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Zoey Sheffield <me@zoey.fyi>"]
 edition = "2018"
 readme = "README.md"
